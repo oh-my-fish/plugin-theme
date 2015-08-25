@@ -32,7 +32,7 @@
 #   Jorge Bucaran <jbucaran@me.com>
 # /
 
-if not set -q __fish_theme_last
+if test -z $__fish_theme_last
   set -g __fish_theme_last $fish_theme
 end
 
@@ -70,12 +70,12 @@ function theme -d "quick theme switcher"
         set_color normal
 
       case -r --restore
-        if set -q __fish_theme_last
-          if test $__fish_theme_last != $fish_theme
+        if test -n "$__fish_theme_last"
+          if test "$__fish_theme_last" != "$fish_theme"
             theme.util.remove.current
 
-            set fish_theme $__fish_theme_last
-            . $fish_path/oh-my-fish.fish
+            set fish_theme "$__fish_theme_last"
+            . "$fish_path/oh-my-fish.fish"
           end
         end
 
@@ -83,8 +83,8 @@ function theme -d "quick theme switcher"
         if test -z "$option"
           echo $usage
 
-        else if test -d $fish_custom/themes/$option -o \
-                     -d $fish_path/themes/$option
+        else if test -d "$fish_custom/themes/$option" -o \
+                     -d "$fish_path/themes/$option"
 
           theme.util.remove.current
 
