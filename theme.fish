@@ -88,7 +88,7 @@ function theme -d "quick theme switcher"
 
           theme.util.remove.current
 
-          set fish_theme $option
+          set -g fish_theme $option
           . $fish_path/oh-my-fish.fish
 
         else
