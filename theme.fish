@@ -16,14 +16,17 @@
 #   theme <theme name>
 #     Quick switch to theme.
 #
+#   theme -a --available
+#     List available themes.
+#
+#   theme -d --download-all
+#     Download all themes available online.
+#
 #   theme -l --list
 #     List available themes.
 #
-#   theme -u --update
-#     Update theme auto-completions.
-#
 #   theme -r --restore
-#     Restore original theme.
+#     Restore previous theme.
 #
 #   theme -h --help
 #     Show usage help.
@@ -37,25 +40,61 @@ if test -z $__fish_theme_last
 end
 
 function theme -d "quick theme switcher"
-  set -l usage "
+  set -l usage "\
     USAGE
       $_ <theme name>
         Quick switch to theme.
 
+      $_ -a --available
+        List all themes available online.
+
+      $_ -d --download-all
+        Download all available themes.
+
       $_ -l --list
-        List available themes.
+        List installed themes.
 
       $_ -r --restore
-        Restore original theme.
+        Restore previous theme.
 
       $_ -h --help
         Show usage help.
   "
   if test (count $argv) -gt 0
+    set -l highlight (set_color green)
+    set -l normal (set_color normal)
+    set -l hl_start ":s"
+    set -l hl_end ":e"
+    set -l equivalent_space "    "
+
     set -l option $argv[1]
     switch $option
       case -h --help help
         echo $usage
+
+      case -a --available
+        set installed (basename -a (theme.util.get.themes) | tr " " "\n")
+        set online (omf.remote --themes | tr " " "\n"); or return 1
+
+        for theme in $online
+          if contains $theme $installed
+            echo "$hl_start$theme$hl_end"
+          else
+            echo "$theme"
+          end
+        end | column -c (tput cols) | \
+              sed -e "s/$hl_start/$highlight/g" \
+                  -e "s/$hl_end/$normal$equivalent_space/g"
+
+      case -d --download-all
+        set installed (basename -a (theme.util.get.themes) | tr " " "\n")
+        set online (omf.remote --themes | tr " " "\n"); or return 1
+        for theme in $online
+          if not contains $theme $installed
+            echo "installing $theme..."
+            omf.packages.install --theme $theme
+          end
+        end
 
       case -l --list
         set -l regex "[[:<:]]($fish_theme)[[:>:]]"
@@ -63,10 +102,15 @@ function theme -d "quick theme switcher"
           set regex "\b($fish_theme)\b"
         end
         set -l color green
-        for theme in (theme.util.get.themes)
-          basename $theme \
-            | sed -E "s/$regex/"(set_color $color)"\1*"(set_color normal)"/"
-        end | column
+        for installed in (basename -a (theme.util.get.themes) | tr " " "\n")
+          if test "$installed" = "$fish_theme"
+            echo "$hl_start$installed*$hl_end"
+          else
+            echo "$installed"
+          end
+        end | column -c (tput cols) | \
+              sed -e "s/$hl_start/$highlight/g" \
+                  -e "s/$hl_end/$normal$equivalent_space/g"
         set_color normal
 
       case -r --restore
