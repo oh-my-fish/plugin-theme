@@ -136,7 +136,7 @@ function theme -d "quick theme switcher"
           . $fish_path/oh-my-fish.fish
 
         else
-          echo (set_color f00)"`$option` is not a theme."(set_color normal) ^&2
+          echo (set_color f00)"`$option` is not a theme."(set_color normal) >&2
           theme --list
           return 1
         end
